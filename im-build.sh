@@ -1,7 +1,17 @@
+make_dir () {
+    if [ ! -d $1 ]; then
+        if ! mkdir $1; then            
+            printf "\n Failed to create dir %s" "$1";
+            exit 1
+        fi
+    fi    
+}
+
 docker build --tag=ffmpeg:default --output type=local,dest=build -f Dockerfile .
 
+
 DIST_FOLDER = ./dist
-mkdir $DIST_FOLDER
+make_dir $DIST_FOLDER
 
 cp build/lib/aarch64-linux-gnu/libm.so.6 $DIST_FOLDER
 cp build/lib/aarch64-linux-gnu/libstdc++.so.6 $DIST_FOLDER
