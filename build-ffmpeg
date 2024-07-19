@@ -537,49 +537,53 @@ if $NONFREE_AND_GPL; then
   CONFIGURE_OPTIONS+=("--enable-libx264")
 fi
 
-if $NONFREE_AND_GPL; then
-  if build "x265" "3.5"; then
-    download "https://github.com/videolan/x265/archive/Release_$CURRENT_PACKAGE_VERSION.tar.gz" "x265-$CURRENT_PACKAGE_VERSION.tar.gz" # This is actually 3.4 if looking at x265Version.txt
-    cd build/linux || exit
-    rm -rf 8bit 10bit 12bit 2>/dev/null
-    mkdir -p 8bit 10bit 12bit
-    cd 12bit || exit
-    execute cmake ../../../source -DCMAKE_INSTALL_PREFIX="${WORKSPACE}" -DENABLE_SHARED=OFF -DBUILD_SHARED_LIBS=OFF -DHIGH_BIT_DEPTH=ON -DENABLE_HDR10_PLUS=ON -DEXPORT_C_API=OFF -DENABLE_CLI=OFF -DMAIN12=ON
-    execute make -j $MJOBS
-    cd ../10bit || exit
-    execute cmake ../../../source -DCMAKE_INSTALL_PREFIX="${WORKSPACE}" -DENABLE_SHARED=OFF -DBUILD_SHARED_LIBS=OFF -DHIGH_BIT_DEPTH=ON -DENABLE_HDR10_PLUS=ON -DEXPORT_C_API=OFF -DENABLE_CLI=OFF
-    execute make -j $MJOBS
-    cd ../8bit || exit
-    ln -sf ../10bit/libx265.a libx265_main10.a
-    ln -sf ../12bit/libx265.a libx265_main12.a
-    execute cmake ../../../source -DCMAKE_INSTALL_PREFIX="${WORKSPACE}" -DENABLE_SHARED=OFF -DBUILD_SHARED_LIBS=OFF -DEXTRA_LIB="x265_main10.a;x265_main12.a;-ldl" -DEXTRA_LINK_FLAGS=-L. -DLINKED_10BIT=ON -DLINKED_12BIT=ON
-    execute make -j $MJOBS
+# There is an issue building ffmpeg with libx256 while also including openssl,
+# so because we only currently care about ffprobe, we’re going to modify the build script 
+# by excluding --enable-libx265 build option.
 
-    mv libx265.a libx265_main.a
+# if $NONFREE_AND_GPL; then
+#   if build "x265" "3.5"; then
+#     download "https://github.com/videolan/x265/archive/Release_$CURRENT_PACKAGE_VERSION.tar.gz" "x265-$CURRENT_PACKAGE_VERSION.tar.gz" # This is actually 3.4 if looking at x265Version.txt
+#     cd build/linux || exit
+#     rm -rf 8bit 10bit 12bit 2>/dev/null
+#     mkdir -p 8bit 10bit 12bit
+#     cd 12bit || exit
+#     execute cmake ../../../source -DCMAKE_INSTALL_PREFIX="${WORKSPACE}" -DENABLE_SHARED=OFF -DBUILD_SHARED_LIBS=OFF -DHIGH_BIT_DEPTH=ON -DENABLE_HDR10_PLUS=ON -DEXPORT_C_API=OFF -DENABLE_CLI=OFF -DMAIN12=ON
+#     execute make -j $MJOBS
+#     cd ../10bit || exit
+#     execute cmake ../../../source -DCMAKE_INSTALL_PREFIX="${WORKSPACE}" -DENABLE_SHARED=OFF -DBUILD_SHARED_LIBS=OFF -DHIGH_BIT_DEPTH=ON -DENABLE_HDR10_PLUS=ON -DEXPORT_C_API=OFF -DENABLE_CLI=OFF
+#     execute make -j $MJOBS
+#     cd ../8bit || exit
+#     ln -sf ../10bit/libx265.a libx265_main10.a
+#     ln -sf ../12bit/libx265.a libx265_main12.a
+#     execute cmake ../../../source -DCMAKE_INSTALL_PREFIX="${WORKSPACE}" -DENABLE_SHARED=OFF -DBUILD_SHARED_LIBS=OFF -DEXTRA_LIB="x265_main10.a;x265_main12.a;-ldl" -DEXTRA_LINK_FLAGS=-L. -DLINKED_10BIT=ON -DLINKED_12BIT=ON
+#     execute make -j $MJOBS
 
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-      execute "${MACOS_LIBTOOL}" -static -o libx265.a libx265_main.a libx265_main10.a libx265_main12.a 2>/dev/null
-    else
-      execute ar -M <<EOF
-CREATE libx265.a
-ADDLIB libx265_main.a
-ADDLIB libx265_main10.a
-ADDLIB libx265_main12.a
-SAVE
-END
-EOF
-    fi
+#     mv libx265.a libx265_main.a
 
-    execute make install
+#     if [[ "$OSTYPE" == "darwin"* ]]; then
+#       execute "${MACOS_LIBTOOL}" -static -o libx265.a libx265_main.a libx265_main10.a libx265_main12.a 2>/dev/null
+#     else
+#       execute ar -M <<EOF
+# CREATE libx265.a
+# ADDLIB libx265_main.a
+# ADDLIB libx265_main10.a
+# ADDLIB libx265_main12.a
+# SAVE
+# END
+# EOF
+#     fi
 
-    if [ -n "$LDEXEFLAGS" ]; then
-      sed -i.backup 's/-lgcc_s/-lgcc_eh/g' "${WORKSPACE}/lib/pkgconfig/x265.pc" # The -i.backup is intended and required on MacOS: https://stackoverflow.com/questions/5694228/sed-in-place-flag-that-works-both-on-mac-bsd-and-linux
-    fi
+#     execute make install
 
-    build_done "x265" $CURRENT_PACKAGE_VERSION
-  fi
-  CONFIGURE_OPTIONS+=("--enable-libx265")
-fi
+#     if [ -n "$LDEXEFLAGS" ]; then
+#       sed -i.backup 's/-lgcc_s/-lgcc_eh/g' "${WORKSPACE}/lib/pkgconfig/x265.pc" # The -i.backup is intended and required on MacOS: https://stackoverflow.com/questions/5694228/sed-in-place-flag-that-works-both-on-mac-bsd-and-linux
+#     fi
+
+#     build_done "x265" $CURRENT_PACKAGE_VERSION
+#   fi
+#   CONFIGURE_OPTIONS+=("--enable-libx265")
+# fi
 
 if build "libvpx" "1.13.1"; then
   download "https://github.com/webmproject/libvpx/archive/refs/tags/v$CURRENT_PACKAGE_VERSION.tar.gz" "libvpx-$CURRENT_PACKAGE_VERSION.tar.gz"

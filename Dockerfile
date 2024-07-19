@@ -11,7 +11,9 @@ RUN apt-get update \
 WORKDIR /app
 COPY ./build-ffmpeg /app/build-ffmpeg
 
-RUN SKIPINSTALL=yes /app/build-ffmpeg --build
+# Add --enable-gpl-and-non-free so that ffmpeg is built with
+# the --enable-openssl so that it can connect to https urls
+RUN SKIPINSTALL=yes /app/build-ffmpeg --enable-gpl-and-non-free --build
 
 FROM ubuntu:22.04
 
