@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Dynamic build of FFprobe for Amazon Lambda with ARM64 arch
+
+  Check out https://github.com/ImageMetrics/ffmpeg-build-script/tree/feature/ffprobe-aws-lambda-layer
+  for more information.
+Parameters:
+  ffprobeVersion:
+    Type: String
+    Default: latest
+Resources:
+  LambdaLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: !Sub "ffprobe-${ffprobeVersion}-arm64" 
+      Description: !Sub "FFProbe (version: ${ffprobeVersion}) for ARM64 AWS Lambda"
+      ContentUri: build/layer
+      CompatibleArchitectures:
+        - arm64
+      CompatibleRuntimes:
+        - nodejs10.x
+        - python3.6
+        - ruby2.5
+        - java8
+        - go1.x
+      LicenseInfo: GPL-2.0-or-later
+      RetentionPolicy: Retain
+
+Outputs:
+  LayerVersion:
+    Description: Layer ARN Reference
+    Value: !Ref LambdaLayer
